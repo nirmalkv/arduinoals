@@ -32,13 +32,17 @@ int main(){
  
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd,TCSANOW,&newtio);
-    int i = 20;
-    while(i>0){
-    res = read(fd,buf,255);
-    buf[res]=0;
-    cout<<buf;
-    i--;
+    int i,sum;
+    while(1){
+        i = 50;
+        sum = 0;
+        while(i>0){
+            res = read(fd,buf,255); 
+            buf[res]=0;
+            sum = sum + atoi(buf);
+            i--;
+        }
+        cout << sum/50<<"\n";
     }
-
     close(fd);
 }
