@@ -58,6 +58,7 @@ int main(int argc, char const *argv[])
     struct termios oldtio,newtio;
     char buf[255];
     int maxBrightness = getScreenBacklightMax();
+    int minBrightness = 150;
 
     fd = open(MODEMDEVICE, O_RDWR | O_NOCTTY );
     if (fd <0) {perror(MODEMDEVICE); exit(-1); } 
@@ -74,21 +75,39 @@ int main(int argc, char const *argv[])
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd,TCSANOW,&newtio);
     int prevBrightness = getScreenActuallightMax();
-    int i,sum,avgVal = 0;
+    int i,sum,avgVal = 0,sensorVal,actualBrightness,change;
     while(1){
-        i = 50;
+        i = 20;
         sum = 0;
         while(i>0){
             res = read(fd,buf,255); 
             buf[res]=0;
-            sum = sum + atoi(buf);
+            sensorVal = atoi(buf);
+            if(sensorVal > 1000){
+                sensorVal = maxBrightness;
+            }
+            else if (sensorVal < 150){
+                sensorVal = minBrightness;
+            }
+            sum = sum + sensorVal;
             i--;
         }
-        avgVal = sum / 50;
-        cout << avgVal <<"-" <<getScreenActuallightMax()<<"\n";
-        if(abs(prevBrightness - avgVal) > 20){
-
-            changeBrightness(avgVal-prevBrightness);
+        avgVal = sum / 20;
+        actualBrightness = getScreenActuallightMax();
+        // cout << avgVal <<"-" <<actualBrightness<<"\n";
+        change = avgVal - prevBrightness;
+        if(abs(change) > 20){
+            if((actualBrightness + change) >= maxBrightness){
+                changeBrightness(maxBrightness - actualBrightness);
+            }
+            else if ((actualBrightness + change) <= minBrightness)
+            {
+                changeBrightness(minBrightness - actualBrightness);
+            }
+            else{
+                changeBrightness(change);
+            }
+            
         }
         prevBrightness = getScreenActuallightMax();
     }
