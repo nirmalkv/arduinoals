@@ -39,26 +39,35 @@ int getScreenActuallightMax()
     return value;
 }
 
-int changeBrightness(int val)
+int changeBrightness(int val,int sim)
 {
     int actualBrightness = getScreenActuallightMax();
-    string path = backlightdevicepath  + "brightness";
-    int fout = open(path.c_str(), O_WRONLY);
+    // string path = backlightdevicepath  + "brightness";
+    // int fout = open(path.c_str(), O_WRONLY);
     int newBrightness = actualBrightness + val;
     char str[4];
     sprintf(str,"%d",newBrightness);
-    write(fout, str, sizeof(str));
-    close(fout);
+    write(sim, str, sizeof(str));
+	fsync(sim);
+    // write(fout, str, sizeof(str));
+    // close(fout);
 }
 
 
 int main(int argc, char const *argv[])
 {
+    int sim_fd;
+    char str[16];
+    sim_fd = open("/sys/devices/platform/virmouse/alsevent", O_RDWR);
+    if (sim_fd < 0) {
+        perror("Couldn't open vms coordinate file\n");
+        exit(-1);
+    }
     int fd,c,res;
-    struct termios oldtio,newtio;
-    char buf[255];
     int maxBrightness = getScreenBacklightMax();
     int minBrightness = 150;
+    struct termios oldtio,newtio;
+    char buf[255];
 
     fd = open(MODEMDEVICE, O_RDWR | O_NOCTTY );
     if (fd <0) {perror(MODEMDEVICE); exit(-1); } 
@@ -74,8 +83,8 @@ int main(int argc, char const *argv[])
  
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd,TCSANOW,&newtio);
-    int prevBrightness = getScreenActuallightMax();
-    int i,sum,avgVal = 0,sensorVal,actualBrightness,change;
+    
+    int i,sum,avgVal = 0,sensorVal,change,prevBrightness;
     while(1){
         i = 20;
         sum = 0;
@@ -93,23 +102,27 @@ int main(int argc, char const *argv[])
             i--;
         }
         avgVal = sum / 20;
-        actualBrightness = getScreenActuallightMax();
-        // cout << avgVal <<"-" <<actualBrightness<<"\n";
-        change = avgVal - prevBrightness;
-        if(abs(change) > 20){
-            if((actualBrightness + change) >= maxBrightness){
-                changeBrightness(maxBrightness - actualBrightness);
-            }
-            else if ((actualBrightness + change) <= minBrightness)
-            {
-                changeBrightness(minBrightness - actualBrightness);
-            }
-            else{
-                changeBrightness(change);
-            }
-            
-        }
         prevBrightness = getScreenActuallightMax();
+        sprintf(str,"%d %d %d %d",avgVal, minBrightness, maxBrightness, prevBrightness);
+        write(sim_fd, str, sizeof(str));
+	    fsync(sim_fd);
+        // actualBrightness = getScreenActuallightMax();
+        // // cout << avgVal <<"-" <<actualBrightness<<"\n";
+        // change = avgVal - prevBrightness;
+        // if(abs(change) > 20){
+        //     if((actualBrightness + change) >= maxBrightness){
+        //         changeBrightness((maxBrightness - actualBrightness), sim_fd);
+        //     }
+        //     else if ((actualBrightness + change) <= minBrightness)
+        //     {
+        //         changeBrightness((minBrightness - actualBrightness), sim_fd);
+        //     }
+        //     else{
+        //         changeBrightness(change,sim_fd);
+        //     }
+            
+        // }
+        // prevBrightness = getScreenActuallightMax();
     }
     close(fd);
     return 0;
