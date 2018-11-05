@@ -1,4 +1,4 @@
-obj-m+=vms1.o
+obj-m+=alsdriver.o
 all:
 		make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) modules
 clean:
