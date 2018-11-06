@@ -32,6 +32,7 @@ static ssize_t writeBrightness(struct device *dev, struct device_attribute *attr
     // copiying input data to variables 
     sscanf(buffer, "%d %d %d %d", &sensorVal, &minBrightness, &maxBrightness, &actualBrightness);
 
+    //change in brightness value
     change = sensorVal - actualBrightness;
     abschange = (change > 0)? change:(-change);
     if(abschange > 20){
@@ -73,7 +74,7 @@ static struct attribute_group alsAttributesGrp = {
 int __init als_init(void)
 {
     // Register a platform device 
-    alsDevice = platform_device_register_simple("virmouse", -1, NULL, 0);
+    alsDevice = platform_device_register_simple("autobrightness", -1, NULL, 0);
     if (IS_ERR(alsDevice)){
         printk ("als_init: error\n");
         return PTR_ERR(alsDevice);
@@ -112,7 +113,7 @@ void als_uninit(void)
     
     return;
 }
-
+// Function definition of file open from kernel space
 struct file* openFileKern(const char* path, int flags, int rights)
 {
 	struct file* filp = NULL;
@@ -130,11 +131,13 @@ struct file* openFileKern(const char* path, int flags, int rights)
 	return filp;
 }
 
+// Function to close file 
 void closeFileKern(struct file* file)
 {
 	filp_close(file, NULL);
 }
 
+// Function to write into a file
 int writeFileKern(struct file* file, unsigned long long offset, const char* data, unsigned int size)
 {
 	mm_segment_t oldfs;
