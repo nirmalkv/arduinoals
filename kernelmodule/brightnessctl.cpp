@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 #define BAUDRATE B9600
-#define MODEMDEVICE "/dev/ttyUSB0"
+#define USBDEVICE "/dev/ttyUSB0"
 
 using namespace std;
 string const backlightdevicepath ="/sys/class/backlight/intel_backlight/";
@@ -55,10 +55,10 @@ int main()
 
     // To read serial data from usb device ttyUSB0
     struct termios oldtio,newtio;
-    char buf[255];
+    char buf[4];
 
-    fd = open(MODEMDEVICE, O_RDWR | O_NOCTTY );
-    if (fd <0) {perror(MODEMDEVICE); exit(-1); } 
+    fd = open(USBDEVICE, O_RDWR | O_NOCTTY );
+    if (fd <0) {perror(USBDEVICE); exit(-1); } 
 
     tcgetattr(fd,&oldtio);
     bzero(&newtio, sizeof(newtio));
@@ -76,7 +76,7 @@ int main()
         i = 20;
         sum = 0;
         while(i>0){
-            res = read(fd,buf,255); 
+            res = read(fd,buf,4); 
             buf[res]=0;
             sensorVal = atoi(buf);
             if(sensorVal > 1000){
