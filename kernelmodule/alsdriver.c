@@ -18,7 +18,7 @@ struct input_dev *alsInDevice;
 static struct platform_device *alsDevice; // Device structure
 struct file *brightnessfileptr;
 
-// File operation functions from kernel space (Not Recommended!!) 
+// File operation functions from kernel space. (Not recommended!)
 struct file* openFileKern(const char* path, int flags, int rights);
 void closeFileKern(struct file* file);
 int writeFileKern(struct file* file, unsigned long long offset, const char* data, unsigned int size);
@@ -94,7 +94,7 @@ int __init als_init(void)
     input_register_device(alsInDevice);
     
     // print messages in the kernel log
-    printk("Virtual Mouse Driver Initialized.\n");
+    printk("Virtual alsdriver Initialized.\n");
     
     return 0;
 }
